@@ -1,0 +1,5 @@
+#site address here
+$Site = "https://www.youtube.com/user/PowerfulJRE/videos"
+#invoke request on site
+$Test = Invoke-WebRequest $Site
+$Test | Get-Member
