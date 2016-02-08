@@ -1,1 +1,10 @@
-
+#get yesterday's date
+$yesterdaysDate = (Get-Date).AddDays(-1)
+#assign JRE homepage to siteAddress
+$siteAddress = "https://www.youtube.com/user/PowerfulJRE/videos"
+#connect to the webpage
+$HTML = Invoke-WebRequest -Uri $siteAddress 
+#parse the webpage's html to select the videos outerhtml constrained by class 'yt-lockup-content' and upload date date being hours ago
+$parsedInformation = $HTML.AllElements | where class -like "*yt-lockup-content*"  | where {($_.outerhtml -like "*hours ago*")} |Sort-Object innerText
+#selects the url of desired video based on simple regex
+$parsedInformation.outerHTML -match '/watch.{15}' | out-null; $Matches[0]
