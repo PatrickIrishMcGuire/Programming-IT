@@ -1,10 +1,28 @@
 #get yesterday's date
 $yesterdaysDate = (Get-Date).AddDays(-1)
 #assign JRE homepage to siteAddress
-$siteAddress = "https://www.youtube.com/user/PowerfulJRE/videos"
+$youtubeSiteAddress = "https://www.youtube.com/user/PowerfulJRE/videos"
 #connect to the webpage
-$HTML = Invoke-WebRequest -Uri $siteAddress 
+$hTMLInfo = Invoke-WebRequest -Uri $youtubeSiteAddress 
 #parse the webpage's html to select the videos outerhtml constrained by class 'yt-lockup-content' and upload date date being hours ago
-$parsedInformation = $HTML.AllElements | where class -like "*yt-lockup-content*"  | where {($_.outerhtml -like "*hours ago*")} |Sort-Object innerText
-#selects the url of desired video based on simple regex
-$parsedInformation.outerHTML -match '/watch.{15}' | out-null; $Matches[0]
+$parsedInformation = $hTMLInfo.AllElements | where class -like "*yt-lockup-content*"  | where {($_.outerhtml -like "*hours ago*")} |Sort-Object innerText
+#selects the unique string of the video based with regex
+$parsedInformation -match '/watch.{14}'| Out-Null; $Matches[0] 
+#creates full youtube URL
+$videoURL = "https://www.youtube.com$($Matches[0])" 
+write-host $videoURL
+#creates youtubeinmp4.com URL
+$youtubeInMp4URL = "http://youtubeinmp4.com/youtube.php?video=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3$($Matches[0])"
+write-host $youtubeInMp4URL
+
+$yIMP4Request = Invoke-WebRequest -Uri $youtubeInMp4URL
+#gathers redirects from all hrefs 
+$parsedInformation2 = $yIMP4Request.Links | select href | where {($_.href -like '*redirect*')}
+#regex to match video-to-mp4 download button
+$parsedInformation2 -match 'redirect+(?:(?!}).)*' | Out-Null; $Matches[0]
+
+#allow computer to load
+start-sleep 3
+#start download
+start-process "chrome.exe" "http://www.youtubeinmp4.com/$($Matches[0])"
+
