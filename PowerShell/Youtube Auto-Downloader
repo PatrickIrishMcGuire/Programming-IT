@@ -5,15 +5,13 @@ $youtubeSiteAddress = "https://www.youtube.com/user/PowerfulJRE/videos"
 #connect to the webpage
 $hTMLInfo = Invoke-WebRequest -Uri $youtubeSiteAddress 
 #parse the webpage's html to select the videos outerhtml constrained by class 'yt-lockup-content' and upload date date being hours ago
-$parsedInformation = $hTMLInfo.AllElements | where class -like "*yt-lockup-content*"  | where {($_.outerhtml -like "*hours ago*")} |Sort-Object innerText
+$parsedInformation = $hTMLInfo.AllElements | where class -like "*yt-lockup-content*"  | where {($_.outerhtml -like "*hours ago*") -or ($_.outerhtml -like "*minutes ago*")} |Sort-Object innerText
 #selects the unique string of the video based with regex
 $parsedInformation -match '/watch.{14}'| Out-Null; $Matches[0] 
 #creates full youtube URL
 $videoURL = "https://www.youtube.com$($Matches[0])" 
-write-host $videoURL
 #creates youtubeinmp4.com URL
 $youtubeInMp4URL = "http://youtubeinmp4.com/youtube.php?video=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3$($Matches[0])"
-write-host $youtubeInMp4URL
 
 $yIMP4Request = Invoke-WebRequest -Uri $youtubeInMp4URL
 #gathers redirects from all hrefs 
@@ -21,8 +19,14 @@ $parsedInformation2 = $yIMP4Request.Links | select href | where {($_.href -like 
 #regex to match video-to-mp4 download button
 $parsedInformation2 -match 'redirect+(?:(?!}).)*' | Out-Null; $Matches[0]
 
+
 #allow computer to load
-start-sleep 3
 #start download
-start-process "chrome.exe" "http://www.youtubeinmp4.com/$($Matches[0])"
+start-process "chrome.exe"
+start-process "chrome.exe" -wait  "http://www.youtubeinmp4.com/$($Matches[0])"
+#Program to transfer files to phone wirelessly 
+invoke-item -Path 'C:\Program Files (x86)\AirDroid\AirDroid.exe'
+
+
+#set download location to JRE folder as first line then set back to default on last line
 
